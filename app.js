@@ -112,7 +112,8 @@ app.use((req,res,next)=>{
 
 //Routing to the ROOT PATH
 app.get("/",(req,res)=>{
-   res.send("successfull");
+          res.redirect("/listing")
+
 })
 //routes
 app.use("/listing",listingRouter)
