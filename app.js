@@ -23,6 +23,12 @@ const userRouter=require('./routes/user.js')
 const wrapAsync=require('./utils/wrapAsync.js');
 const ExpressError=require('./utils/ExpressError.js')
 
+const paymentRouter =require('./routes/payment.js') 
+app.use(express.json());
+app.use("/payment", paymentRouter);
+
+
+
 const methodOverride=require('method-override')
 
 // app.use(bodyParser.urlencoded({ extended: false }));

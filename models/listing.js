@@ -13,7 +13,7 @@ const listingSchema =new mongoose.Schema({
     },
     category:{
         type:String,
-        enum:['Beach','Skiing','Castles','Iconic','Romantic','Sunlight','Water',"Green",'Night']
+        enum:['Beach','Skiing','Castles','Iconic','Romantic','Sunlight','Water',"Green",'StudentPGs']
     },
     price:Number,
     location:String,

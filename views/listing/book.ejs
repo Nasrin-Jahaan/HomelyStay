@@ -1,28 +1,97 @@
 <% layout('layout/boilerplate') -%>
 
-<div class="row mt-3">
-    <div class="col-8 offset-2">
-        <h1 style="font-weight:400;color:#3C6E71;padding: 1.5rem 0;">Book Now  !</h1>
-        
-       <form action="/listing/payment" method="get" class="needs-validation" novalidate>
-            <div class="mb-3">
-                <label class="form-label" for="username">Name:</label>
-                <input type="text" class="form-control" name="name"   id="username"  value=<%=data%> disabled>
-                
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="email">From:</label>
-                <input type="date" class="form-control" name="from"  placeholder="Enter Date" id="password" required>
-            
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="email">To:</label>
-                <input type="date" class="form-control" name="to"  placeholder="Enter DateS" id="password" required>
-            
-            </div>
-            <input type=" text " name="price" hidden value=<%=data2.price%>>
-            
-            <button class="btn btn-success mb-4">Submit</button>
-        </form>
-    </div>
+<h2 class="mt-4 mb-2" style="text-align:center;"><%= listing.title %></h2>
+<p style="font-size:larger;"><b>Price per night: ₹<%= listing.price %></b></p>
+
+<form id="booking-form" novalidate class="needs-validation">
+<div class="mb-3">
+  <label  class="form-label">From Date:</label>
+  <input type="date" id="from-date"  class="form-control" required>
 </div>
+<div class="mb-3">
+  <label  class="form-label">To Date:</label>
+  <input type="date" id="to-date"  class="form-control" required>
+</div>
+<div class="mb-3">
+  <label  class="form-label">Phone Number:</label>
+<input type="tel" id="phone"  class="form-control" placeholder="Enter phone number"  maxlength="10"  pattern="[0-9]{10}" required>
+</div>
+  <p id="total-price" style="margin-top:10px; font-weight:bold;"></p>
+
+  <button type="button" id="pay-btn" class="btn btn-success mb-1" disabled>
+    Pay ₹<%= listing.price %>
+  </button>
+</form>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+  const pricePerNight = Number(<%- JSON.stringify(listing.price) %>);
+  const payBtn = document.getElementById("pay-btn");
+  const totalPriceEl = document.getElementById("total-price");
+  let totalAmount = 0;
+
+  // Function to calculate total price based on selected dates
+  function calculateTotal() {
+    const fromDate = new Date(document.getElementById("from-date").value);
+    const toDate = new Date(document.getElementById("to-date").value);
+
+    if (fromDate && toDate && toDate > fromDate) {
+      const diffTime = Math.abs(toDate - fromDate);
+      const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Convert ms to days
+      totalAmount = days * pricePerNight;
+      totalPriceEl.textContent = `Total (${days} nights): ₹${totalAmount}`;
+      payBtn.textContent = `Pay ₹${totalAmount}`;
+      payBtn.disabled = false;
+    } else {
+      totalPriceEl.textContent = "";
+      payBtn.textContent = `Pay ₹${pricePerNight}`;
+      payBtn.disabled = true;
+    }
+  }
+
+  // Listen to date changes
+  document.getElementById("from-date").addEventListener("change", calculateTotal);
+  document.getElementById("to-date").addEventListener("change", calculateTotal);
+
+  // Handle Razorpay payment
+  payBtn.onclick = async function () {
+    const phone = document.getElementById("phone").value.trim();
+    if (!phone) {
+      alert("Please enter phone number");
+      return;
+    }
+
+    // Step 1️⃣: Create order from backend
+    const response = await fetch("/payment/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: totalAmount }),
+    });
+
+    const order = await response.json();
+
+    // Step 2️⃣: Configure Razorpay
+    const options = {
+      key: "<%= process.env.RAZORPAY_KEY_ID %>",
+      amount: order.amount,
+      currency: order.currency,
+      name: "Homelystay",
+      description: "Booking Payment",
+      order_id: order.id,
+      handler: function (response) {
+        alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+        window.location.href = "/listing?success=true";
+      },
+      prefill: {
+        name: "Demo User",
+        email: "demo@example.com",
+        contact: phone,
+      },
+      theme: { color: "#3399cc" },
+    };
+
+    const rzp1 = new Razorpay(options);
+    rzp1.open();
+  };
+</script>

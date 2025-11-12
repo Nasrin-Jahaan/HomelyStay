@@ -1,9 +1,73 @@
 <% layout('layout/boilerplate') -%>
-<div class="pay   mt-4">
-    <h1 class="mt-2 mb-2" style="text-align: center; font-weight: 700;font-family: Georgia, 'Times New Roman', Times, serif; font-size: 3rem;">Make Payment</h1>
-    <img src="https://media.istockphoto.com/id/2162238220/photo/qr-code-sample-for-smartphone-scanning-isolated-on-white-background.webp?a=1&b=1&s=612x612&w=0&k=20&c=mC1WGoB31wZmYoCB04HUSiqu0m0xq3z5yWMwZvqOR5A=" alt="">
+ 
+
+
+
+
+        <h1 style="font-weight:400;color:#3C6E71;padding: 1.5rem 0;">Book Now  !</h1>
+        
+       <form  class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label class="form-label" for="username">Name:</label>
+                <input type="text" class="form-control" name="name"   id="username"  value=<%=listing.location%> disabled>
+                
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="email">From:</label>
+                <input type="date" class="form-control" name="from"  placeholder="Enter Date" id="password" required>
+            
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="email">To:</label>
+                <input type="date" class="form-control" name="to"  placeholder="Enter DateS" id="password" required>
+            
+            </div>
+            <input type=" text " name="price" hidden value=<%=listing.price%>>
+            
+            <button class="btn btn-success mb-4">Submit</button>
+        </form>
     
-    <h3 class="mb-4" style="text-align: center;font-size: 2rem;font-weight: 600;">Pay:<%=p%></h3>
-    
-    <a href="/listing"  class="btn btn-primary mb-4 book-btn" style="text-align: center; font-size: 1.4rem;"> Make payment</button>
-</div>
+
+<button id="pay-btn">Pay ₹<%= listing.price %></button>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script >
+
+  document.getElementById("pay-btn").onclick = async function () {
+
+
+const amount=<%= listing.price %>
+
+
+
+    // Step 1️⃣: Create order from backend
+    const response = await fetch("/payment/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount }),
+        });
+        const order = await response.json();
+
+        var options = {
+          key: "<%= process.env.RAZORPAY_KEY_ID %>",
+          amount: order.amount,
+          currency: order.currency,
+          name: "Homelystay",
+          description: "Booking Payment",
+          order_id: order.id,
+          handler: function (response) {
+            alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+          },
+          prefill: {
+            name: "Demo User",
+            email: "demo@example.com",
+            contact: "9999999999",
+          },
+          theme: { color: "#3399cc" },
+        };
+
+        var rzp1 = new Razorpay(options);
+        rzp1.open();
+      };
+</script>
+

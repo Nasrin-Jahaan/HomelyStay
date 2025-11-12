@@ -6,6 +6,7 @@ const List=require("../models/listing")
 const User=require("../models/user")
 
 module.exports.index=async(req,res)=>{
+    
    let {categ}=req.query;
    let data; 
    console.log(categ)
@@ -49,21 +50,34 @@ let {id}=req.params;
  //let newData ={data, data2}
  res.render("listing/book.ejs",{data,data2})
 }
-module.exports.payment=(req,res)=>{
-   let data=req.query;
-   const st=new Date(data.from)
-   const t=new Date(data.to)
+// module.exports.payment=(req,res)=>{
+//    let data=req.query;
+//    const st=new Date(data.from)
+//    const t=new Date(data.to)
 
-   const diffTime=Math.abs(t-st)
-   const diff=Math.ceil(diffTime/(1000*60*60*24))
-   console.log(diff)
-   const p=data.price*diff;
+//    const diffTime=Math.abs(t-st)
+//    const diff=Math.ceil(diffTime/(1000*60*60*24))
+//    console.log(diff)
+//    const p=data.price*diff;
    
-   console.log(p)
+//    console.log(p)
    
    
-   res.render("listing/payment.ejs",{diff , p })
+//    res.render("listing/payment.ejs",{diff , p })
+// }
+
+module.exports.payment=async (req,res)=>{
+    let {id}=req.params;
+    let listing=await List.findById(id)
+
+    if(!listing){
+       req.flash("error",'The page you requested for does not exist')
+       res.redirect("/listing")
+    }
+    
+    res.render("listing/book.ejs",{listing});
 }
+
 module.exports.search=async(req,res)=>{
     let {search}=req.query;
     let data=await List.find({title:{$regex :new RegExp(search,'i') }})
